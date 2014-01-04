@@ -1,0 +1,89 @@
+{% load i18n %}
+{% load debug_toolbar_utils %}
+<style type="text/css">
+.cache-stats ul.stats li {
+    width: 15% !important;
+    list-style-type: none;
+}
+</style>
+
+<div class="clearfix cache-stats">
+    <ul class="stats">
+        <li>
+            <strong class="label">{% trans "Total Calls" %}:</strong>
+            <span class="info">{{ stats.calls }}</span>
+        </li>
+        <li>
+        	<strong class="label">{% trans "Total Time" %}:</strong>
+        	<span class="info">{{ stats.duration }}ms</span>
+        </li>
+        <li>
+        	<strong class="label">{% trans "Hits" %}:</strong>
+        	<span class="info">{{ stats.hits }}</span>
+        </li>
+        <li>
+        	<strong class="label">{% trans "Misses" %}:</strong>
+        	<span class="info">{{ stats.misses }}</span>
+        </li>
+        {% for command, count in commands.iteritems %}
+        <li>
+    	    <strong class="label">{{ command.title }}s:</strong>
+    	    <span class="info">{{ count }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if calls %}
+<table>
+    <thead>
+        <tr>
+            <th></th>
+            <th>{% trans 'Duration' %}</th>
+            <th>{% trans 'Call' %}</th>
+            <th>{% trans 'Key' %}</th>
+            <th>{% trans 'Args' %}</th>
+            <th>{% trans 'Result' %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for call in calls %}
+        <tr class="{{ call.function }} {% cycle 'djDebugOdd' 'djDebugEven' %}">
+            <td class="toggle">
+                <a class="djToggleSwitch" data-toggle-id="{{ forloop.counter }}" data-toggle-open="+" data-toggle-close="-" href="javascript:void(0)">+</a>
+            </td>
+            <td>{{ call.duration }} <sup>ms</sup>
+            </td>
+            <td>{{ call.function }}</td>
+            <td>{{ call.key }}</td>
+            <td><pre>{{ call.args }}</pre></td>
+            <td><pre>{{ call.value }}</pre></td>
+        </tr>
+        <tr class="djUnselected {% cycle 'djDebugOdd' 'djDebugEven' %} djToggleDetails_{{ forloop.counter }}">
+            <td></td>
+            <td colspan=5>
+                <p><strong>Stacktrace:</strong></p>
+                {% if call.stacktrace %}
+                <div class="djSQLHideStacktraceDiv">
+                    <pre class="stack">{{ call.stacktrace }}</pre>
+                    {% if call.template_info %}
+                    <table>
+                        {% for line in call.template_info.context %}
+                        <tr>
+                            <td>{{ line.num }}</td>
+                            <td><code style="font-family: monospace;{% if line.highlight %}background-color: lightgrey{% endif %}">{{ line.content }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    <p><strong>{{ call.template_info.name|default:"(unknown)" }}</strong></p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+
